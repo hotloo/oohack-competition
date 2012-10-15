@@ -1,0 +1,1 @@
+hadoop jar $HADOOP_HOME/contrib/streaming/hadoop-streaming-1.0.3.jar -file ./mapper.py -mapper ./mapper.py -file ./reducer.py -reducer ./reducer.py -input /Users/hotloo/Documents/Develop/hadoop-store/test_data -output /Users/hotloo/Documents/Develop/hadoop-store/output2
