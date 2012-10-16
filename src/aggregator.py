@@ -30,7 +30,7 @@ class Aggregator(object):
 		self.create_company_videoembed()
 		self.create_company_competitor()
 		self.create_company_funding()
-		self.create_company_ipo()
+		self.create_company_ipo(cursor)
 		self.split_company()
 		self.export_data(filename)
 	
@@ -49,13 +49,10 @@ class Aggregator(object):
 		self.company_name = dict()
 		
 		for row in cursor.fetchall():
-			try:
-				self.data[row[0] - 1] = 0
-				self.company_name[str(row[1])] = int(row[0]) - 1
-			except IndexError:
-				ipdb.set_trace()
-			# Number of employee
+			self.data[row[0] - 1] = 0
+			self.company_name[str(row[1])] = int(row[0]) - 1
 			
+			# Number of employee
 			try:
 				try:
 					self.data[row[0] - 1, 1] = float(row[2])
@@ -122,9 +119,12 @@ class Aggregator(object):
 		"""docstring for create_company_funding"""
 		pass
 		
-	def create_company_ipo(self):
+	def create_company_ipo(self,cursor):
 		"""docstring for create_company_ipo"""
-		pass
+		print "IPO label creation"
+		query = "SELECT "
+		
+		print "\t...Done"
 		
 	def export_data(self,file):
 		"""docstring for export_data"""
