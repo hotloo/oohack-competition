@@ -15,18 +15,33 @@ import numpy as np
 # it's a positive example?
 
 
-def normalize_nan(X, column):
+def normalize_nan(X, columns):
     '''Values that are None (missing) are represented by np.nan in in a
-    hardcoded way. This puts mean of that column instead. Copying,
-    inneficient, but data is small and no time for more'''
+    hardcoded way. This puts mean of that column instead.'''
     masked_X = np.ma.masked_array(X, np.isnan(X))
-    mean = np.mean(masked_X, axis=0)[column]
-    X  = masked_X.filled(mean)
-    return X
+    for i in columns:
+        X[:, i] = masked_X[:, i].filled(np.mean(masked_X, axis=0)[i])
+
+
+def normalize_hashes(X, columns):
+    '''Some string values are represented as hash integers, this makes those
+    values continuous.'''
+    le = preprocessing.LabelEncoder()
+    for i in columns:
+        X[:, i] = le.fit_transform(X[:, i])
 
 
 def evaluate(target, predicted):
-    return sum(target == predicted)
+    total = len(target)
+    correct = sum(target == predicted)
+    tp = sum(np.logical_and(target, predicted))
+    fp = sum(np.logical_and(target == 0, predicted == 1))
+    fn = sum(np.logical_and(target == 1, predicted == 0))
+    accuracy = correct / total
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
+    f1 = 2 * precision * recall / (precision + recall)
+    return (accuracy, recall, precision, f1)
 
 
 def main():
@@ -84,7 +99,7 @@ def main():
 
     print 'Starting Cross-Validation training and evaluation'
     cvround = 1
-    cvrounds = 5
+    cvrounds = 10
     cv = cross_validation.KFold(len(train), k=cvrounds, indices=False)
     results = np.array([], dtype='uint8')
     for traincv, testcv in cv:
@@ -92,8 +107,11 @@ def main():
         pclass = clf.fit(train[traincv], target[traincv]).predict(train[testcv])
         results = np.concatenate((results, pclass))
         cvround += 1
-    print 'Estimated CV accuracy: ' + str(evaluate(target, results) /
-          len(target))
+    evaluation = evaluate(target, results)
+    print 'Estimated CV accuracy: ', evaluation[0]
+    print 'Estimated CV precision: ', evaluation[1]
+    print 'Estimated CV recall: ', evaluation[2]
+    print 'Estimated CV F1 score: ', evaluation[3]
 
     # print 'Loading test data'
     # # test = np.loadtxt('../data/test.csv', dtype=np.float64, delimiter=',',
