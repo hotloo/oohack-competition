@@ -137,13 +137,13 @@ class Aggregator(object):
 		train_file = file + "_train"
 		test_file = file + "_test"
 		
-		positive_example = self.data[np.where(self.data[:,0] == 1),:]
-		negative_example = self.data[np.where(self.data[:,0] == 0),:]
+		positive_example = self.data[np.where(self.data[:,0] == 1)[0],:]
+		negative_example = self.data[np.where(self.data[:,0] == 0)[0],:]
 		
 		rand_perm = np.random.permutation(negative_example.shape[0])
 		
-		np.save(train_file,np.concatenate((positive_example,negative_example[rand_perm[0:804]]),1))
-		np.save(test_file,negative_example[rand_perm[805:]])
+		np.save(train_file,np.concatenate((positive_example,negative_example[rand_perm[0:804],:])))
+		np.save(test_file,negative_example[rand_perm[805:],:])
 		
 if __name__ == "__main__":
 	company_profile = Aggregator()
