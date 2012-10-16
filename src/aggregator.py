@@ -33,6 +33,7 @@ class Aggregator(object):
 		self.create_company_competitor(cursor)
 		self.create_company_funding(cursor)
 		self.create_company_ipo(cursor)
+		self.create_company_acquisition(cursor)
 		self.export_data(filename)
 	
 	def create_company_id(self,cursor):
@@ -43,6 +44,7 @@ class Aggregator(object):
 		self.num_company = cursor.execute(query)
 		
 		self.data = np.array(np.zeros((self.num_company,1)))
+		self.data[:,0] = np.nan
 		self.company_name = dict()
 		
 		for row in cursor.fetchall():
@@ -76,15 +78,15 @@ class Aggregator(object):
 			# Alive attributes
 			try:
 				if row[6] == None or row[7] == None or row[8] == None :
-					self.data[row[0] - 1, 3] = 1.0
+					self.data[row[0] - 1, 0] = 1.0
 				else:
-					self.data[row[0] - 1, 3] = 0.0
+					self.data[row[0] - 1, 0] = 0.0
 			except IndexError:
 				self.data = np.concatenate( ( self.data, np.zeros((self.num_company,1)) ), 1)
 				if row[6] == None or row[7] == None or row[8] == None :
-					self.data[row[0] - 1, 3] = 1.0
+					self.data[row[0] - 1, 0] = 1.0
 				else:
-					self.data[row[0] - 1, 3] = 0.0
+					self.data[row[0] - 1, 0] = 0.0
 
 		print "\t...Done"
 		
@@ -97,10 +99,10 @@ class Aggregator(object):
 		
 		for row in cursor.fetchall():
 			try:
-				self.data[row[0] - 1,4] = row[1]
+				self.data[row[0] - 1,3] = row[1]
 			except IndexError:
 				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
-				self.data[row[0] - 1,4] = row[1]
+				self.data[row[0] - 1,3] = row[1]
 		print "\t...Done"
 		
 	def create_company_milestone(self,cursor):
@@ -111,10 +113,10 @@ class Aggregator(object):
 		
 		for row in cursor.fetchall():
 			try:
-				self.data[row[0] - 1,5] = row[1]
+				self.data[row[0] - 1,4] = row[1]
 			except IndexError:
 				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
-				self.data[row[0] - 1,5] = row[1]
+				self.data[row[0] - 1,4] = row[1]
 		
 		print "\t...Done"
 		
@@ -127,10 +129,10 @@ class Aggregator(object):
 		
 		for row in cursor.fetchall():
 			try:
-				self.data[row[0] - 1,6] = zlib.adler32(str(row[1]))
+				self.data[row[0] - 1,5] = zlib.adler32(str(row[1]))
 			except IndexError:
 				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
-				self.data[row[0] - 1,6] = zlib.adler32(str(row[1]))
+				self.data[row[0] - 1,5] = zlib.adler32(str(row[1]))
 		
 		print "\t...Done"
 		
@@ -158,10 +160,10 @@ class Aggregator(object):
 		for key in company_relation_dict.keys():
 			for people in company_relation_dict[key]:
 				try:
-					self.data[float(key) - 1,7] = self.data[float(key) - 1,7] + float(people_relation_dict[str(people)])
+					self.data[float(key) - 1,6] = self.data[float(key) - 1,7] + float(people_relation_dict[str(people)])
 				except IndexError:
 					self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
-					self.data[float(key) - 1,7] = float(people_relation_dict[str(people)])
+					self.data[float(key) - 1,6] = float(people_relation_dict[str(people)])
 		
 		print "\t...Done"
 		
@@ -173,10 +175,10 @@ class Aggregator(object):
 		
 		for row in cursor.fetchall():
 			try:
-				self.data[row[0] - 1,8] = row[1]
+				self.data[row[0] - 1,7] = row[1]
 			except IndexError:
 				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
-				self.data[row[0] - 1,8] = row[1]
+				self.data[row[0] - 1,7] = row[1]
 		
 		print "\t...Done"
 	
@@ -188,10 +190,10 @@ class Aggregator(object):
 		
 		for row in cursor.fetchall():
 			try:
-				self.data[row[0] - 1,9] = row[1]
+				self.data[row[0] - 1,8] = row[1]
 			except IndexError:
 				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
-				self.data[row[0] - 1,9] = row[1]
+				self.data[row[0] - 1,8] = row[1]
 		
 		print "\t...Done"
 		
@@ -234,8 +236,19 @@ class Aggregator(object):
 		cursor.execute(query)
 		
 		for row in cursor.fetchall():
-			self.data[row[0] - 1] = 1
+			self.data[row[0] - 1] = 3
 		
+		print "\t...Done"
+	
+	def create_company_acquisition(self,cursor):
+		"""docstring for create_company_acquisitionisition"""
+		print "Acqusition label creation"
+		query = "SELECT company_id from acquisition"
+		cursor.execute(query)
+
+		for row in cursor.fetchall():
+			self.data[row[0] - 1] = 2
+
 		print "\t...Done"
 		
 	def export_data(self,file):
@@ -243,13 +256,17 @@ class Aggregator(object):
 		train_file = file + "_train"
 		test_file = file + "_test"
 		
-		positive_example = self.data[np.where(self.data[:,0] == 1)[0],:]
-		negative_example = self.data[np.where(self.data[:,0] == 0)[0],:]
-		
-		rand_perm = np.random.permutation(negative_example.shape[0])
-		
-		np.save(train_file,np.concatenate((positive_example,negative_example[rand_perm[0:804],:])))
-		np.save(test_file,negative_example[rand_perm[805:],:])
+		alive_example = self.data[np.where(self.data[:,0] == 1)[0],:]
+		dead_example = self.data[np.where(self.data[:,0] == 0)[0],:]
+		acquire_example = self.data[np.where(self.data[:,0] == 2)[0],:]
+		ipo_example = self.data[np.where(self.data[:,0] == 3)[0],:]
+		train_data = np.concatenate((alive_example,dead_example))
+		train_data = np.concatenate((train_data,acquire_example))
+		train_data = np.concatenate((train_data,ipo_example))
+		test_data = self.data[np.where(self.data[:,0] == np.nan)[0],:]
+				
+		np.save(train_file,train_data)
+		np.save(test_file,test_data)
 		
 if __name__ == "__main__":
 	company_profile = Aggregator()
