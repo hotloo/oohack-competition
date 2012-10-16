@@ -1,3 +1,4 @@
+
 """This is the files to pull all the necessary information about a company"""
 
 import MySQLdb
@@ -122,7 +123,12 @@ class Aggregator(object):
 	def create_company_ipo(self,cursor):
 		"""docstring for create_company_ipo"""
 		print "IPO label creation"
-		query = "SELECT "
+		query = "SELECT company_id FROM ipo"
+		
+		cursor.execute(query)
+		
+		for row in cursor.fetchall():
+			self.data[row[0] - 1] = 1
 		
 		print "\t...Done"
 		
@@ -130,8 +136,14 @@ class Aggregator(object):
 		"""docstring for export_data"""
 		train_file = file + "_train"
 		test_file = file + "_test"
-		np.save(train_file,self.data[0:2000])
-		np.save(test_file,self.data[2001:])
+		
+		positive_example = self.data[np.where(self.data[:,0] == 1),:]
+		negative_example = self.data[np.where(self.data[:,0] == 0),:]
+		
+		rand_perm = np.random.permutation(negative_example.shape[0])
+		
+		np.save(train_file,np.concatenate((positive_example,negative_example[rand_perm[0:804]]),1))
+		np.save(test_file,negative_example[rand_perm[805:]])
 		
 if __name__ == "__main__":
 	company_profile = Aggregator()
