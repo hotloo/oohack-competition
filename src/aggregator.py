@@ -31,15 +31,10 @@ class Aggregator(object):
 		self.create_company_relationship(cursor)
 		self.create_company_videoembed(cursor)
 		self.create_company_competitor(cursor)
-		self.create_company_funding()
+		self.create_company_funding(cursor)
 		self.create_company_ipo(cursor)
-		self.split_company()
 		self.export_data(filename)
 	
-	def split_company(self):
-		"""docstring for split_company"""
-		pass
-		
 	def create_company_id(self,cursor):
 		"""docstring for create_company_id"""
 		print "Company ID creation"
@@ -200,15 +195,42 @@ class Aggregator(object):
 		
 		print "\t...Done"
 		
-	def create_company_funding(self):
+	def create_company_funding(self,cursor):
 		"""docstring for create_company_funding"""
-		pass
+		print "Company funding round creation"
+		query = "SELECT company_id, COUNT(raised_amount), MAX(funded_year), MIN(funded_year) FROM funding_round GROUP BY company_id"
+		cursor.execute(query)
+		
+		for row in cursor.fetchall():
+			try:
+				try:
+					self.data[row[0] - 1,9] = row[1]
+				except TypeError:
+					self.data[row[0] - 1,9] = np.nan
+			except IndexError:
+				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
+				try:
+					self.data[row[0] - 1,9] = row[1]
+				except TypeError:
+					self.data[row[0] - 1,9] = np.nan
+			try:
+				try:
+					self.data[row[0] - 1,10] = np.abs(row[2] - row[3])
+				except TypeError:
+					self.data[row[0] - 1,10] = np.nan
+			except IndexError:
+				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
+				try:
+					self.data[row[0] - 1,10] = np.abs(row[2] - row[3])
+				except TypeError:
+					self.data[row[0] - 1,10] = np.nan
+			
+		print "\t...Done"
 		
 	def create_company_ipo(self,cursor):
 		"""docstring for create_company_ipo"""
 		print "IPO label creation"
 		query = "SELECT company_id FROM ipo"
-		
 		cursor.execute(query)
 		
 		for row in cursor.fetchall():
