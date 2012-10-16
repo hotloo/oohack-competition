@@ -17,10 +17,12 @@ import numpy as np
 
 def normalize_nan(X, column):
     '''Values that are None (missing) are represented by np.nan in in a
-    hardcoded way. This puts mean of that column instead'''
+    hardcoded way. This puts mean of that column instead. Copying,
+    inneficient, but data is small and no time for more'''
     masked_X = np.ma.masked_array(X, np.isnan(X))
     mean = np.mean(masked_X, axis=0)[column]
     X  = masked_X.filled(mean)
+    return X
 
 
 def evaluate(target, predicted):
@@ -32,7 +34,7 @@ def main():
     print 'Loading train data'
     # dataset = np.loadtxt('../data/train.csv', dtype=np.float64, delimiter=',',
     #                      skip_header=0)
-    dataset = np.load('../data/train.npy')
+    dataset = np.load('../data/oohack_train.npy')
     #Copying like hell, should use views instead
     target = np.array([x[0] for x in dataset])
     train = np.array([x[1:] for x in dataset])
@@ -96,7 +98,7 @@ def main():
     # print 'Loading test data'
     # # test = np.loadtxt('../data/test.csv', dtype=np.float64, delimiter=',',
     # #                   skip_header=0)
-    # test = np.load('../data/test.npy')
+    # test = np.load('../data/oohack_test.npy')
     # print 'Data loaded, starting pre-processing'
     # #Same scaling
     # test = scaler.transform(test)
