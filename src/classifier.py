@@ -1,4 +1,4 @@
-#!/bin/python2
+#!/usr/bin/python2
 from __future__ import division
 from sklearn.ensemble import RandomForestClassifier
 # from sklearn import svm
@@ -11,6 +11,18 @@ from sklearn import cross_validation
 import numpy as np
 
 
+# Additional preprocessing ideas: if a company is dead treat it as false even if
+# it's a positive example?
+
+
+def normalize_nan(X, column):
+    '''Values that are None (missing) are represented by np.nan in in a
+    hardcoded way. This puts mean of that column instead'''
+    masked_X = np.ma.masked_array(X, np.isnan(X))
+    mean = np.mean(masked_X, axis=0)[column]
+    X  = masked_X.filled(mean)
+
+
 def evaluate(target, predicted):
     return sum(target == predicted)
 
@@ -18,9 +30,10 @@ def evaluate(target, predicted):
 def main():
     #Skipping the header row with [1:]
     print 'Loading train data'
-    # dataset = np.genfromtxt(open('../data/train.csv', 'r'), delimiter=',',
-    #                         dtype='Float64', skip_header=0)
+    # dataset = np.loadtxt('../data/train.csv', dtype=np.float64, delimiter=',',
+    #                      skip_header=0)
     dataset = np.load('../data/train.npy')
+    #Copying like hell, should use views instead
     target = np.array([x[0] for x in dataset])
     train = np.array([x[1:] for x in dataset])
     # target = np.load('../data/target.npy')
@@ -28,10 +41,8 @@ def main():
 
     print 'Data loaded, starting pre-processing'
     scaler = preprocessing.Scaler()
-    scaler.fit(train)
-    train = scaler.transform(train)
+    train = scaler.fit_transform(train)
 
-    #train = np.array([normalize(x) for x in train])
     #PCA, keep 95% of variance WRONG IF TRAIN/TEST ARE NOT EQUALLY NORMALIZED!
     #Also tricky if the proportion of all numbers is not the same
     # pca = decomposition.PCA()
@@ -55,8 +66,12 @@ def main():
                                  max_depth=None, n_jobs=-1)
 
     # Some good default values for classification
-    #clf = svm.SVC(gamma=0.001, kernel='poly', degree=3)
-    #clf = svm.SVC(gamma=0.001, kernel='linear')
+    #clf = svm.SVC(cache_size=512, gamma=0.001, kernel='poly', degree=3,
+                   #class_weight='auto')
+    #clf = svm.SVC(cache_size=512, gamma=0.001, kernel='rbf', degree=3,
+                   #class_weight='auto')
+    #clf = svm.SVC(cache_size=512, gamma=0.001, kernel='linear',
+                   #class_weight='auto')
     #clf = LinearSVC(penalty='l1', dual=False, tol=1e-3)
     #clf = LinearSVC(loss='l2', penalty='l1', dual=False, tol=1e-3)
     #clf = LinearSVC(loss='l2', penalty='l2', dual=False, tol=1e-3)
@@ -65,21 +80,24 @@ def main():
     #clf = linear_model.LogisticRegression()
     #clf = MultinomialNB(alpha=.01)
 
-    cv = cross_validation.KFold(len(train), k=5, indices=False)
-
-    results = np.array([], dtype='uint8')
     print 'Starting Cross-Validation training and evaluation'
+    cvround = 1
+    cvrounds = 5
+    cv = cross_validation.KFold(len(train), k=cvrounds, indices=False)
+    results = np.array([], dtype='uint8')
     for traincv, testcv in cv:
+        print 'Starting CV round:', cvround, 'of', cvrounds
         pclass = clf.fit(train[traincv], target[traincv]).predict(train[testcv])
         results = np.concatenate((results, pclass))
-    print 'Estimated (CV) accuracy: ' + str(evaluate(target, results) / len(target))
+        cvround += 1
+    print 'Estimated CV accuracy: ' + str(evaluate(target, results) /
+          len(target))
 
     # print 'Loading test data'
-    # # test = np.genfromtxt(open('../data/test.csv', 'r'), delimiter=',',
-    # #                      dtype='Float64', skip_header=0)
+    # # test = np.loadtxt('../data/test.csv', dtype=np.float64, delimiter=',',
+    # #                   skip_header=0)
     # test = np.load('../data/test.npy')
     # print 'Data loaded, starting pre-processing'
-    # #test = np.array([normalize(x) for x in test])
     # #Same scaling
     # test = scaler.transform(test)
     # #Same PCA transformation
