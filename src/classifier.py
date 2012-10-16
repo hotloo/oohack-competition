@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 from __future__ import division
 from sklearn.ensemble import RandomForestClassifier
-# from sklearn import svm
+from sklearn import svm
 # from sklearn.naive_bayes import MultinomialNB
 # from sklearn import neighbors
 # from sklearn import linear_model
@@ -65,7 +65,7 @@ def main():
     train = np.concatenate((data[indexes[0:7000]], data[others]))
     target = np.concatenate((data_target[indexes[0:7000]], data_target[others]))
 
-    nan_cols = [2]
+    nan_cols = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     hashed_cols = []
     normalize_nan(train, nan_cols)
     normalize_hashes(train, hashed_cols)
@@ -82,10 +82,10 @@ def main():
     print 'Post pre-processing features:', n_features
 
     # Some good default values for classification
-    clf = RandomForestClassifier(n_estimators=100,
-                                 max_features='sqrt',
-                                 max_depth=None, n_jobs=-1)
-
+    # clf = RandomForestClassifier(n_estimators=100,
+    #                              max_features='sqrt',
+    #                              max_depth=None, n_jobs=-1)
+    clf = svm.SVC(gamma=0.001, kernel='linear')
     print 'Starting Cross-Validation training and evaluation'
     cvround = 1
     cvrounds = 5
