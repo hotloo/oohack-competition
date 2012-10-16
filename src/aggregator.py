@@ -24,7 +24,7 @@ class Aggregator(object):
 				
 		cursor = self.db.cursor()
 		self.create_company_id(cursor)
-		self.create_company_external()
+		self.create_company_external(cursor)
 		self.create_company_milestone()
 		self.create_company_office()
 		self.create_company_relationship()
@@ -44,9 +44,9 @@ class Aggregator(object):
 		print "Company ID creation"
 		query = "SELECT id, name, number_of_employees, founded_year, founded_month, founded_day, deadpooled_year, deadpooled_month, deadpooled_day FROM COMPANY"
 		
-		num_company = cursor.execute(query)
+		self.num_company = cursor.execute(query)
 		
-		self.data = np.array(np.zeros((num_company,1)))
+		self.data = np.array(np.zeros((self.num_company,1)))
 		self.company_name = dict()
 		
 		for row in cursor.fetchall():
@@ -60,7 +60,7 @@ class Aggregator(object):
 				except TypeError:
 					self.data[row[0] - 1, 1] = np.nan
 			except IndexError:
-				self.data = np.concatenate( ( self.data, np.zeros((num_company,1)) ), 1)
+				self.data = np.concatenate( ( self.data, np.zeros((self.num_company,1)) ), 1)
 				try:
 					self.data[row[0] - 1, 1] = float(row[2])
 				except TypeError:
@@ -72,7 +72,7 @@ class Aggregator(object):
 				except (TypeError,ValueError):
 					self.data[row[0] - 1, 2] = np.nan
 			except IndexError:
-				self.data = np.concatenate( ( self.data, np.zeros((num_company,1)) ), 1)
+				self.data = np.concatenate( ( self.data, np.zeros((self.num_company,1)) ), 1)
 				try:
 					self.data[row[0] - 1, 2] = time.mktime(datetime.datetime(row[3],row[4],row[5]).timetuple())
 				except (TypeError,ValueError):
@@ -84,7 +84,7 @@ class Aggregator(object):
 				else:
 					self.data[row[0] - 1, 3] = 0.0
 			except IndexError:
-				self.data = np.concatenate( ( self.data, np.zeros((num_company,1)) ), 1)
+				self.data = np.concatenate( ( self.data, np.zeros((self.num_company,1)) ), 1)
 				if row[6] == None or row[7] == None or row[8] == None :
 					self.data[row[0] - 1, 3] = 1.0
 				else:
@@ -92,8 +92,20 @@ class Aggregator(object):
 
 		print "\t...Done"
 		
-	def create_company_external(self):
+	def create_company_external(self,cursor):
 		"""docstring for create_company_external"""
+		print "Company external creation"
+		query = "SELECT company_id,count(id) FROM company_external_link GROUP BY company_id"
+		
+		cursor.execute(query)
+		
+		for row in cursor.fetchall():
+			try:
+				self.data[row[0] - 1,4] = row[1]
+			except IndexError:
+				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
+				self.data[row[0] - 1,4] = row[1]
+		print "\t...Done"
 		pass
 		
 	def create_company_milestone(self):
