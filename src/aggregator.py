@@ -135,4 +135,4 @@ class Aggregator(object):
 		
 if __name__ == "__main__":
 	company_profile = Aggregator()
-	company_profile.create_company("oohack")
+	company_profile.create_company("../data/oohack")
