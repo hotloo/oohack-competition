@@ -1,1 +1,3 @@
 src/test_data
+*.pyc
+*.pyo
