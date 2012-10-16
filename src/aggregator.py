@@ -21,7 +21,7 @@ class Aggregator(object):
 		test_data = np.array(zeros(*,*))
 		
 		cursor = self.db.cursor()
-		self.create_life_span(train_data,test_data,cursor)
+		self.create_company_id(train_data,test_data,cursor)
 		self.create_company_external()
 		self.create_company_milestone()
 		self.create_company_office()
@@ -35,6 +35,10 @@ class Aggregator(object):
 	
 	def split_company(self):
 		"""docstring for split_company"""
+		pass
+		
+	def create_company_id(self):
+		"""docstring for create_company_id"""
 		pass
 	
 	def create_company_external(self):
