@@ -34,15 +34,16 @@ def normalize_hashes(X, columns):
 def evaluate(target, predicted):
     total = len(target)
     correct = sum(target == predicted)
-    tp = sum(np.logical_and(target, predicted))
-    fp = sum(np.logical_and(target == 0, predicted == 1))
-    fn = sum(np.logical_and(target == 1, predicted == 0))
+    # tp = sum(np.logical_and(target, predicted))
+    # fp = sum(np.logical_and(target == 0, predicted == 1))
+    # fn = sum(np.logical_and(target == 1, predicted == 0))
     # print total, correct, tp, fp, fn
     accuracy = correct / total
-    precision = tp / (tp + fp)
-    recall = tp / (tp + fn)
-    f1 = 2 * precision * recall / (precision + recall)
-    return (accuracy, recall, precision, f1)
+    # precision = tp / (tp + fp)
+    # recall = tp / (tp + fn)
+    # f1 = 2 * precision * recall / (precision + recall)
+    # return (accuracy, recall, precision, f1)
+    return accuracy
 
 
 def main():
@@ -58,7 +59,7 @@ def main():
 
     print 'Data loaded, starting pre-processing'
     nan_cols = [2]
-    hashed_cols = [5]
+    hashed_cols = []
     normalize_nan(train, nan_cols)
     normalize_hashes(train, hashed_cols)
     scaler = preprocessing.Scaler()
@@ -102,10 +103,11 @@ def main():
         results = np.concatenate((results, pclass))
         cvround += 1
     evaluation = evaluate(target, results)
-    print 'Estimated CV accuracy: ', evaluation[0]
-    print 'Estimated CV precision: ', evaluation[1]
-    print 'Estimated CV recall: ', evaluation[2]
-    print 'Estimated CV F1 score: ', evaluation[3]
+    print 'Estimated CV accuracy: ', evaluation
+    # print 'Estimated CV accuracy: ', evaluation[0]
+    # print 'Estimated CV precision: ', evaluation[1]
+    # print 'Estimated CV recall: ', evaluation[2]
+    # print 'Estimated CV F1 score: ', evaluation[3]
 
 
     # print 'Retraining with everything and saving results'
