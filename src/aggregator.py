@@ -28,9 +28,9 @@ class Aggregator(object):
 		self.create_company_external(cursor)
 		self.create_company_milestone(cursor)
 		self.create_company_office(cursor)
-		self.create_company_relationship()
-		self.create_company_videoembed()
-		self.create_company_competitor()
+		self.create_company_relationship(cursor)
+		self.create_company_videoembed(cursor)
+		self.create_company_competitor(cursor)
 		self.create_company_funding()
 		self.create_company_ipo(cursor)
 		self.split_company()
@@ -59,13 +59,13 @@ class Aggregator(object):
 				try:
 					self.data[row[0] - 1, 1] = float(row[2])
 				except TypeError:
-					self.data[row[0] - 1, 1] = np.nan
+					self.data[row[0] - 1, 1] = 0.0
 			except IndexError:
 				self.data = np.concatenate( ( self.data, np.zeros((self.num_company,1)) ), 1)
 				try:
 					self.data[row[0] - 1, 1] = float(row[2])
 				except TypeError:
-					self.data[row[0] - 1, 1] = np.nan
+					self.data[row[0] - 1, 1] = 0.0
 			# Launch Time
 			try:
 				try:
@@ -139,17 +139,66 @@ class Aggregator(object):
 		
 		print "\t...Done"
 		
-	def create_company_relationship(self):
+	def create_company_relationship(self,cursor):
 		"""docstring for create_company_relationship"""
-		pass
+		print "Company relationship creatioin"
+		query = "SELECT company_id,person_id FROM company_relationship"
+		cursor.execute(query)
 		
-	def create_company_videoembed(self):
+		company_relation_dict = dict()
+		
+		for row in cursor.fetchall():
+			if str(row[0]) in company_relation_dict.keys():
+				company_relation_dict[str(row[0])].append(row[1])
+			else:
+				company_relation_dict[str(row[0])] = [row[1]]
+		
+		query = "SELECT person_id,COUNT(company_id) FROM company_relationship GROUP BY person_id"
+		cursor.execute(query)
+		
+		people_relation_dict = dict()
+		for row in cursor.fetchall():
+			people_relation_dict[str(row[0])] = float(row[1])
+		
+		for key in company_relation_dict.keys():
+			for people in company_relation_dict[key]:
+				try:
+					self.data[float(key) - 1,7] = self.data[float(key) - 1,7] + float(people_relation_dict[str(people)])
+				except IndexError:
+					self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
+					self.data[float(key) - 1,7] = float(people_relation_dict[str(people)])
+		
+		print "\t...Done"
+		
+	def create_company_videoembed(self,cursor):
 		"""docstring for create_company_videoembed"""
-		pass
+		print "Company milestone creation"
+		query = "SELECT company_id,COUNT(id) FROM company_video_embed GROUP BY company_id"
+		cursor.execute(query)
+		
+		for row in cursor.fetchall():
+			try:
+				self.data[row[0] - 1,8] = row[1]
+			except IndexError:
+				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
+				self.data[row[0] - 1,8] = row[1]
+		
+		print "\t...Done"
 	
-	def create_company_competitor(self):
+	def create_company_competitor(self,cursor):
 		"""docstring for create_company_competitor"""
-		pass
+		print "Company milestone creation"
+		query = "SELECT company_id,COUNT(competitor_id) FROM competitor GROUP BY company_id"
+		cursor.execute(query)
+		
+		for row in cursor.fetchall():
+			try:
+				self.data[row[0] - 1,9] = row[1]
+			except IndexError:
+				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
+				self.data[row[0] - 1,9] = row[1]
+		
+		print "\t...Done"
 		
 	def create_company_funding(self):
 		"""docstring for create_company_funding"""
