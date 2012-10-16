@@ -25,7 +25,7 @@ class Aggregator(object):
 		cursor = self.db.cursor()
 		self.create_company_id(cursor)
 		self.create_company_external(cursor)
-		self.create_company_milestone()
+		self.create_company_milestone(cursor)
 		self.create_company_office()
 		self.create_company_relationship()
 		self.create_company_videoembed()
@@ -95,7 +95,7 @@ class Aggregator(object):
 	def create_company_external(self,cursor):
 		"""docstring for create_company_external"""
 		print "Company external creation"
-		query = "SELECT company_id,count(id) FROM company_external_link GROUP BY company_id"
+		query = "SELECT company_id,COUNT(id) FROM company_external_link GROUP BY company_id"
 		
 		cursor.execute(query)
 		
@@ -106,11 +106,22 @@ class Aggregator(object):
 				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
 				self.data[row[0] - 1,4] = row[1]
 		print "\t...Done"
-		pass
 		
-	def create_company_milestone(self):
+	def create_company_milestone(self,cursor):
 		"""docstring for create_company_milestone"""
-		pass
+		print "Company milestone creation"
+		query = "SELECT company_id,COUNT(id) FROM company_milestone GROUP BY company_id"
+		cursor.execute(query)
+		
+		for row in cursor.fetchall():
+			try:
+				self.data[row[0] - 1,5] = row[1]
+			except IndexError:
+				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
+				self.data[row[0] - 1,5] = row[1]
+		
+		print "\t...Done"
+		
 	
 	def create_company_office(self):
 		"""docstring for fname"""
