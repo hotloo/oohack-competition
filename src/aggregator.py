@@ -6,6 +6,7 @@ import numpy as np
 import ipdb
 import datetime
 import time
+import zlib
 
 class Aggregator(object):
 	"""docstring for Aggregator
@@ -26,7 +27,7 @@ class Aggregator(object):
 		self.create_company_id(cursor)
 		self.create_company_external(cursor)
 		self.create_company_milestone(cursor)
-		self.create_company_office()
+		self.create_company_office(cursor)
 		self.create_company_relationship()
 		self.create_company_videoembed()
 		self.create_company_competitor()
@@ -123,9 +124,20 @@ class Aggregator(object):
 		print "\t...Done"
 		
 	
-	def create_company_office(self):
-		"""docstring for fname"""
-		pass
+	def create_company_office(self,cursor):
+		"""docstring for create_company_office"""
+		print "Company office attribute creation"
+		query = "SELECT company_id, country_code FROM company_office"
+		cursor.execute(query)
+		
+		for row in cursor.fetchall():
+			try:
+				self.data[row[0] - 1,6] = zlib.adler32(str(row[1]))
+			except IndexError:
+				self.data = np.concatenate( (self.data, np.zeros( (self.num_company, 1) ) ) ,1 )
+				self.data[row[0] - 1,6] = zlib.adler32(str(row[1]))
+		
+		print "\t...Done"
 		
 	def create_company_relationship(self):
 		"""docstring for create_company_relationship"""
