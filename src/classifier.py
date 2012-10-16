@@ -34,45 +34,40 @@ def normalize_hashes(X, columns):
 def evaluate(target, predicted):
     total = len(target)
     correct = sum(target == predicted)
-    tp = sum(np.logical_and(target, predicted))
-    fp = sum(np.logical_and(target == 0, predicted == 1))
-    fn = sum(np.logical_and(target == 1, predicted == 0))
+    # tp = sum(np.logical_and(target, predicted))
+    # fp = sum(np.logical_and(target == 0, predicted == 1))
+    # fn = sum(np.logical_and(target == 1, predicted == 0))
+    # print total, correct, tp, fp, fn
     accuracy = correct / total
-    precision = tp / (tp + fp)
-    recall = tp / (tp + fn)
-    f1 = 2 * precision * recall / (precision + recall)
-    return (accuracy, recall, precision, f1)
+    # precision = tp / (tp + fp)
+    # recall = tp / (tp + fn)
+    # f1 = 2 * precision * recall / (precision + recall)
+    # return (accuracy, recall, precision, f1)
+    return accuracy
 
 
 def main():
-    #Skipping the header row with [1:]
     print 'Loading train data'
-    # dataset = np.loadtxt('../data/train.csv', dtype=np.float64, delimiter=',',
-    #                      skip_header=0)
     dataset = np.load('../data/oohack_train.npy')
-    #Copying like hell, should use views instead
+    print 'Loading test data'
+    # testset = np.load('../data/oohack_test.npy')
+
     target = np.array([x[0] for x in dataset])
     train = np.array([x[1:] for x in dataset])
-    # target = np.load('../data/target.npy')
-    # train = np.load('../data/train.npy')
+    # test_target = np.array([x[0] for x in testset])
+    # test = np.array([x[1:] for x in testset])
 
     print 'Data loaded, starting pre-processing'
+    nan_cols = [2]
+    hashed_cols = []
+    normalize_nan(train, nan_cols)
+    normalize_hashes(train, hashed_cols)
     scaler = preprocessing.Scaler()
     train = scaler.fit_transform(train)
 
-    #PCA, keep 95% of variance WRONG IF TRAIN/TEST ARE NOT EQUALLY NORMALIZED!
-    #Also tricky if the proportion of all numbers is not the same
-    # pca = decomposition.PCA()
-    # pca.fit(train)
-    # ratio = 0
-    # comp = 0
-    # for i in pca.explained_variance_ratio_:
-    #     ratio += i
-    #     if ratio > 0.95:
-    #         break
-    #     comp += 1
-    # pca.n_components = comp
-    # train = pca.fit_transform(train)
+    # normalize_nan(test, nan_cols)
+    # normalize_hashes(test, hashed_cols)
+    # test = scaler.transform(test)
 
     n_features = train.shape[1]
     print 'Post pre-processing features:', n_features
@@ -99,7 +94,7 @@ def main():
 
     print 'Starting Cross-Validation training and evaluation'
     cvround = 1
-    cvrounds = 10
+    cvrounds = 5
     cv = cross_validation.KFold(len(train), k=cvrounds, indices=False)
     results = np.array([], dtype='uint8')
     for traincv, testcv in cv:
@@ -108,23 +103,20 @@ def main():
         results = np.concatenate((results, pclass))
         cvround += 1
     evaluation = evaluate(target, results)
-    print 'Estimated CV accuracy: ', evaluation[0]
-    print 'Estimated CV precision: ', evaluation[1]
-    print 'Estimated CV recall: ', evaluation[2]
-    print 'Estimated CV F1 score: ', evaluation[3]
+    print 'Estimated CV accuracy: ', evaluation
+    # print 'Estimated CV accuracy: ', evaluation[0]
+    # print 'Estimated CV precision: ', evaluation[1]
+    # print 'Estimated CV recall: ', evaluation[2]
+    # print 'Estimated CV F1 score: ', evaluation[3]
 
-    # print 'Loading test data'
-    # # test = np.loadtxt('../data/test.csv', dtype=np.float64, delimiter=',',
-    # #                   skip_header=0)
-    # test = np.load('../data/oohack_test.npy')
-    # print 'Data loaded, starting pre-processing'
-    # #Same scaling
-    # test = scaler.transform(test)
-    # #Same PCA transformation
-    # # test = pca.fit_transform(test)
 
     # print 'Retraining with everything and saving results'
     # pclass = clf.fit(train, target).predict(test)
+    # evaluation = evaluate(test_target, pclass)
+    # print 'Generalization accuracy: ', evaluation[0]
+    # print 'Generalization precision: ', evaluation[1]
+    # print 'Generalization recall: ', evaluation[2]
+    # print 'Generalization F1 score: ', evaluation[3]
     # np.savetxt('../data/result.csv', pclass, delimiter=',', fmt='%d')
 
 if __name__ == "__main__":
